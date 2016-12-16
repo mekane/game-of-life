@@ -1,10 +1,22 @@
 module.exports = {
+    getCellAt: getCellAt,
     newGame: newGame,
     nextState: nextState,
     tick: tick
 };
 
-function newGame(size) {
+function getCellAt(board, x, y) {
+    const validArray = board && Array.isArray(board) && board.length;
+    const validCoord = x >= 0 && y >= 0 && x < board.length;
+    if (validArray && validCoord) {
+        const row = board[x];
+        if (row && Array.isArray(row) && y < row.length)
+            return row[y];
+    }
+    return 0;
+}
+
+function newGame(size) { //assuming square
     let board = [];
 
     for (let i = 0; i < size; i++) {
@@ -34,15 +46,36 @@ function nextState(board) {
     const totalLivingNeighbors = topRowLivingCount + midRowLivingCount + botRowLivingCount;
     const populationIsOk = (totalLivingNeighbors === 2 || totalLivingNeighbors === 3);
 
-    if ( thisCellIsLiving && populationIsOk )
+    if (thisCellIsLiving && populationIsOk)
         return 1;
 
-    if ( !thisCellIsLiving && totalLivingNeighbors === 3)
+    if (!thisCellIsLiving && totalLivingNeighbors === 3)
         return 1;
 
     return 0;
 }
 
 function tick(board) {
-    return [];
+    if (!board || !Array.isArray(board) || board.length === 0)
+        return [];
+
+    let nextBoard = newGame(board.length); //assuming square
+
+    for (let x = 0; x < board.length; x++) {
+        const row = board[x];
+        for (let y = 0; y < row.length; y++) {
+            const neighborhood = [
+                [c(x - 1, y - 1), c(x - 0, y - 1), c(x + 1, y - 1)],
+                [c(x - 1, y - 0), c(x - 0, y - 0), c(x + 1, y + 0)],
+                [c(x - 1, y + 1), c(x - 0, y + 1), c(x + 1, y + 1)]
+            ];
+            nextBoard[x][y] = nextState(neighborhood);
+        }
+    }
+
+    return nextBoard;
+
+    function c(x, y) {
+        return getCellAt(board, x, y);
+    }
 }

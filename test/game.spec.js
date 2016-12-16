@@ -198,13 +198,70 @@ describe('the Game of Life rules', () => {
             expect(game.nextState(initialStateTwo)).to.equal(1);
             expect(game.nextState(initialStateThree)).to.equal(1);
         });
-
     });
 
+    describe('the getCellAt function', () => {
+        it('should be a function', () => {
+            expect(game.getCellAt).to.be.a('function');
+        });
+
+        it('returns 0 if any of the arguments are bad or missing', () => {
+            expect(game.getCellAt()).to.equal(0);
+            expect(game.getCellAt(null)).to.equal(0);
+            expect(game.getCellAt(123)).to.equal(0);
+            expect(game.getCellAt('foo')).to.equal(0);
+            expect(game.getCellAt({})).to.equal(0);
+            expect(game.getCellAt([])).to.equal(0);
+            expect(game.getCellAt([], 0)).to.equal(0);
+            expect(game.getCellAt([], 0, 0)).to.equal(0);
+        });
+
+        it('returns the value at the 2D array index if valid', () => {
+            const legitArray = [[1]];
+            expect(game.getCellAt(legitArray, 0, 0)).to.equal(1);
+        });
+
+        it('returns the value at the 2D array index if valid', () => {
+            const legitArray = [
+                [0, 1],
+                [1, 0]
+            ];
+            expect(game.getCellAt(legitArray, 0, 1)).to.equal(1);
+            expect(game.getCellAt(legitArray, 1, 0)).to.equal(1);
+        });
+
+        it('returns 0 for coordinates outside the bounds of the array', () => {
+            const legitArray = [
+                [1, 1],
+                [1, 1]
+            ];
+            expect(game.getCellAt(legitArray, -1, -1)).to.equal(0);
+            expect(game.getCellAt(legitArray, -1, 0)).to.equal(0);
+            expect(game.getCellAt(legitArray, -1, 1)).to.equal(0);
+            expect(game.getCellAt(legitArray, -1, 2)).to.equal(0);
+            expect(game.getCellAt(legitArray, 0, -1)).to.equal(0);
+            expect(game.getCellAt(legitArray, 0, 2)).to.equal(0);
+            expect(game.getCellAt(legitArray, 1, -1)).to.equal(0);
+            expect(game.getCellAt(legitArray, 1, 2)).to.equal(0);
+            expect(game.getCellAt(legitArray, 2, -1)).to.equal(0);
+            expect(game.getCellAt(legitArray, 2, 0)).to.equal(0);
+            expect(game.getCellAt(legitArray, 2, 1)).to.equal(0);
+            expect(game.getCellAt(legitArray, 2, 2)).to.equal(0);
+        });
+    });
 
     describe('a game turn (tick)', () => {
         it('should have a tick function', () => {
             expect(game.tick).to.be.a('function');
+        });
+
+        it('should return an empty array for bad arguments', () => {
+            expect(game.tick()).to.deep.equal([]);
+            expect(game.tick(null)).to.deep.equal([]);
+            expect(game.tick('foo')).to.deep.equal([]);
+            expect(game.tick(123)).to.deep.equal([]);
+            expect(game.tick([])).to.deep.equal([]);
+            expect(game.tick({})).to.deep.equal([]);
         });
 
         it('should return a new game state (not mutate the one passed in)', () => {
@@ -214,6 +271,152 @@ describe('the Game of Life rules', () => {
             expect(newGameState).not.to.equal(initialGameState);
         });
 
-        //more game state tests
+        it('should assume zeros at the edges and corners', () => {
+            // 0 0 0
+            // 0 1 0
+            // 0 0 0
+            const initialGameState = [[1]];
+            const newGameState = game.tick(initialGameState);
+            expect(newGameState).to.deep.equal([[0]]);
+        });
+
+        it('should handle the block still life pattern', () => {
+            const blockPattern = [
+                [1, 1],
+                [1, 1]
+            ];
+            const newGameState = game.tick(blockPattern);
+            expect(newGameState).to.not.equal(blockPattern);
+            expect(newGameState).to.deep.equal(blockPattern);
+        });
+
+        it('should handle the beehive still life pattern', () => {
+            const beehivePattern = [
+                [0, 1, 1, 0],
+                [1, 0, 0, 1],
+                [0, 1, 1, 0]
+            ];
+            const newGameState = game.tick(beehivePattern);
+            expect(newGameState).to.deep.equal(beehivePattern);
+        });
+
+        it('should handle the loaf still life pattern', () => {
+            const loafPattern = [
+                [0, 1, 1, 0],
+                [1, 0, 0, 1],
+                [0, 1, 0, 1],
+                [0, 0, 1, 0]
+            ];
+            const newGameState = game.tick(loafPattern);
+            expect(newGameState).to.deep.equal(loafPattern);
+        });
+
+        it('should handle the boat still life pattern', () => {
+            const boatPattern = [
+                [1, 1, 0],
+                [1, 0, 1],
+                [0, 1, 0]
+            ];
+            const newGameState = game.tick(boatPattern);
+            expect(newGameState).to.deep.equal(boatPattern);
+        });
+
+        it('should handle the blinker oscillator pattern', () => {
+            const blinkPattern1 = [
+                [0, 1, 0],
+                [0, 1, 0],
+                [0, 1, 0]
+            ];
+            const blinkPattern2 = [
+                [0, 0, 0],
+                [1, 1, 1],
+                [0, 0, 0]
+            ];
+            let newGameState = game.tick(blinkPattern1);
+            expect(newGameState).to.deep.equal(blinkPattern2);
+            newGameState = game.tick(newGameState);
+            expect(newGameState).to.deep.equal(blinkPattern1);
+        });
+
+        it('should handle the toad oscillator pattern', () => {
+            const toadPattern1 = [
+                [0, 0, 0, 0],
+                [0, 1, 1, 1],
+                [1, 1, 1, 0],
+                [0, 0, 0, 0]
+            ];
+            const toadPattern2 = [
+                [0, 0, 1, 0],
+                [1, 0, 0, 1],
+                [1, 0, 0, 1],
+                [0, 1, 0, 0]
+            ];
+            let newGameState = game.tick(toadPattern1);
+            expect(newGameState).to.deep.equal(toadPattern2);
+            newGameState = game.tick(newGameState);
+            expect(newGameState).to.deep.equal(toadPattern1);
+        });
+
+        it('should handle the beacon oscillator pattern', () => {
+            const beaconPattern1 = [
+                [1, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 1]
+            ];
+            const beaconPattern2 = [
+                [1, 1, 0, 0],
+                [1, 1, 0, 0],
+                [0, 0, 1, 1],
+                [0, 0, 1, 1]
+            ];
+            let newGameState = game.tick(beaconPattern1);
+            expect(newGameState).to.deep.equal(beaconPattern2);
+            newGameState = game.tick(newGameState);
+            expect(newGameState).to.deep.equal(beaconPattern1);
+        });
+
+        it('should handle the glider pattern', () => {
+            const gliderPattern1 = [
+                [0, 1, 0, 0],
+                [0, 0, 1, 0],
+                [1, 1, 1, 0],
+                [0, 0, 0, 0]
+            ];
+            const gliderPattern2 = [
+                [0, 0, 0, 0],
+                [1, 0, 1, 0],
+                [0, 1, 1, 0],
+                [0, 1, 0, 0]
+            ];
+            const gliderPattern3 = [
+                [0, 0, 0, 0],
+                [0, 0, 1, 0],
+                [1, 0, 1, 0],
+                [0, 1, 1, 0]
+            ];
+            const gliderPattern4 = [
+                [0, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, 1, 1],
+                [0, 1, 1, 0]
+            ];
+            const gliderPattern5 = [
+                [0, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+                [0, 1, 1, 1]
+            ];
+
+            const state2 = game.tick(gliderPattern1);
+            const state3 = game.tick(state2);
+            const state4 = game.tick(state3);
+            const state5 = game.tick(state4);
+
+            expect(state2, 'tick1').to.deep.equal(gliderPattern2);
+            expect(state3, 'tick2').to.deep.equal(gliderPattern3);
+            expect(state4, 'tick3').to.deep.equal(gliderPattern4);
+            expect(state5, 'tick4').to.deep.equal(gliderPattern5);
+        });
     });
 });
