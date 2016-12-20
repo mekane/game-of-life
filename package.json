@@ -7,7 +7,7 @@
     "babel": "babel --watch src/ --out-dir build/",
     "test": "mocha --compilers js:babel-core/register",
     "clean": "rm -rf dist",
-    "build": "mkdir dist; ./node_modules/.bin/browserify -o dist/gameOfLife.js -r src/game -s game"
+    "build": "mkdir -p dist; ./node_modules/.bin/browserify -o dist/gameOfLife.js -r ./build/game.js -s game"
   },
   "author": "",
   "license": "ISC",
